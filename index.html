@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movie Success Prediction</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #2563EB 0%, #F3F4F6 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 700px;
+            width: 100%;
+            padding: 40px;
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #6b7280;
+            font-size: 1rem;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .form-group label::before {
+            content: '🎬';
+            font-size: 1rem;
+        }
+
+        .form-group input {
+            padding: 14px 16px;
+            font-size: 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            font-family: inherit;
+            background: #f9fafb;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .form-group input:hover {
+            border-color: #d1d5db;
+        }
+
+        .button-container {
+            display: flex;
+            gap: 12px;
+            margin-top: 8px;
+        }
+
+        button {
+            flex: 1;
+            padding: 16px 24px;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: inherit;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        button:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        button span {
+            position: relative;
+            z-index: 1;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        .btn-secondary:hover {
+            background: #e5e7eb;
+            transform: translateY(-2px);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        #result {
+            margin-top: 32px;
+            padding: 24px;
+            border-radius: 16px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            text-align: center;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transform: scale(0.9);
+            transition: all 0.4s ease;
+        }
+
+        #result.show {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        #result.success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+        }
+
+        #result.average {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);
+        }
+
+        #result.flop {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+        }
+
+        #result.error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 2px solid #fecaca;
+        }
+
+        .result-icon {
+            font-size: 2rem;
+            margin-right: 12px;
+        }
+
+        .result-content {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .result-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            font-weight: 400;
+        }
+
+        .result-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .input-hint {
+            font-size: 0.75rem;
+            color: #9ca3af;
+            margin-top: 4px;
+            font-weight: 400;
+        }
+
+        @media (max-width: 640px) {
+            .container {
+                padding: 24px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .button-container {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎞️ Movie Success Predictor</h1>
+            <p>Predict your movie's success using machine learning</p>
+        </div>
+
+        <form id="predictionForm">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="budget">Budget</label>
+                    <input type="number" id="budget" value="1000000" min="0" required>
+                    <span class="input-hint">Production budget in USD</span>
+                </div>
+
+                <div class="form-group">
+                    <label for="popularity">Popularity Score</label>
+                    <input type="number" step="0.1" id="popularity" value="10.0" min="0" required>
+                    <span class="input-hint">TMDB popularity metric</span>
+                </div>
+
+                <div class="form-group">
+                    <label for="runtime">Runtime</label>
+                    <input type="number" id="runtime" value="120" min="1" required>
+                    <span class="input-hint">Duration in minutes</span>
+                </div>
+
+                <div class="form-group">
+                    <label for="vote_average">Vote Average</label>
+                    <input type="number" step="0.1" min="0" max="10" id="vote_average" value="5.0" required>
+                    <span class="input-hint">Average rating (0-10)</span>
+                </div>
+
+                <div class="form-group">
+                    <label for="vote_count">Vote Count</label>
+                    <input type="number" id="vote_count" value="100" min="0" required>
+                    <span class="input-hint">Number of user ratings</span>
+                </div>
+
+                <div class="form-group">
+                    <label for="genre_count">Genre Count</label>
+                    <input type="number" id="genre_count" value="3" min="1" max="10" required>
+                    <span class="input-hint">Number of genres (1-10)</span>
+                </div>
+
+                <div class="form-group" style="grid-column: 1 / -1;">
+                    <label for="cast_size">Cast Size</label>
+                    <input type="number" id="cast_size" value="10" min="1" required>
+                    <span class="input-hint">Number of cast members</span>
+                </div>
+            </div>
+
+            <div class="button-container">
+                <button type="submit" id="submitBtn" class="btn-primary">
+                    <span id="btnText">🔮 Predict Success</span>
+                </button>
+                <button type="button" id="resetBtn" class="btn-secondary">
+                    <span>🔄 Reset</span>
+                </button>
+            </div>
+        </form>
+
+        <div id="result"></div>
+    </div>
+
+    <script>
+        const form = document.getElementById('predictionForm');
+        const resultDiv = document.getElementById('result');
+        const submitBtn = document.getElementById('submitBtn');
+        const btnText = document.getElementById('btnText');
+        const resetBtn = document.getElementById('resetBtn');
+
+        // Reset button functionality
+        resetBtn.addEventListener('click', function() {
+            form.reset();
+            resultDiv.classList.remove('show', 'success', 'average', 'flop', 'error');
+            resultDiv.innerHTML = '';
+            submitBtn.disabled = false;
+        });
+
+        // Format number with commas
+        function formatNumber(num) {
+            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        }
+
+        // Determine result class based on prediction
+        function getResultClass(prediction) {
+            const pred = prediction.toString().toLowerCase();
+            if (pred.includes('hit') || pred.includes('success')) {
+                return 'success';
+            } else if (pred.includes('average') || pred.includes('medium')) {
+                return 'average';
+            } else if (pred.includes('flop') || pred.includes('fail')) {
+                return 'flop';
+            }
+            return 'average';
+        }
+
+        // Get icon based on prediction
+        function getResultIcon(prediction) {
+            const pred = prediction.toString().toLowerCase();
+            if (pred.includes('hit') || pred.includes('success')) {
+                return '🎉';
+            } else if (pred.includes('average') || pred.includes('medium')) {
+                return '📊';
+            } else if (pred.includes('flop') || pred.includes('fail')) {
+                return '📉';
+            }
+            return '🎬';
+        }
+
+        // Get readable label
+        function getResultLabel(prediction) {
+            const pred = prediction.toString().toLowerCase();
+            if (pred.includes('hit') || pred.includes('success')) {
+                return 'HIT';
+            } else if (pred.includes('average') || pred.includes('medium')) {
+                return 'AVERAGE';
+            } else if (pred.includes('flop') || pred.includes('fail')) {
+                return 'FLOP';
+            }
+            return prediction;
+        }
+
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            // Show loading state
+            submitBtn.disabled = true;
+            btnText.innerHTML = '<div class="loading"></div> Predicting...';
+            resultDiv.classList.remove('show', 'success', 'average', 'flop', 'error');
+            resultDiv.innerHTML = '';
+
+            const formData = {
+                budget: parseFloat(document.getElementById('budget').value),
+                popularity: parseFloat(document.getElementById('popularity').value),
+                runtime: parseInt(document.getElementById('runtime').value),
+                vote_average: parseFloat(document.getElementById('vote_average').value),
+                vote_count: parseInt(document.getElementById('vote_count').value),
+                genre_count: parseInt(document.getElementById('genre_count').value),
+                cast_size: parseInt(document.getElementById('cast_size').value)
+            };
+
+            try {
+                const response = await fetch('http://localhost:5000/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const data = await response.json();
+                
+                // Reset button state
+                submitBtn.disabled = false;
+                btnText.textContent = '🔮 Predict Success';
+
+                if (data.error) {
+                    resultDiv.className = 'error show';
+                    resultDiv.innerHTML = `
+                        <div class="result-content">
+                            <span class="result-icon">⚠️</span>
+                            <div>
+                                <div class="result-label">Error</div>
+                                <div class="result-value">${data.error}</div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    const prediction = data.prediction;
+                    const resultClass = getResultClass(prediction);
+                    const resultIcon = getResultIcon(prediction);
+                    const resultLabel = getResultLabel(prediction);
+
+                    resultDiv.className = `${resultClass} show`;
+                    resultDiv.innerHTML = `
+                        <div class="result-content">
+                            <span class="result-icon">${resultIcon}</span>
+                            <div>
+                                <div class="result-label">Predicted Success</div>
+                                <div class="result-value">${resultLabel}</div>
+                            </div>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                submitBtn.disabled = false;
+                btnText.textContent = '🔮 Predict Success';
+                
+                resultDiv.className = 'error show';
+                resultDiv.innerHTML = `
+                    <div class="result-content">
+                        <span class="result-icon">❌</span>
+                        <div>
+                            <div class="result-label">Connection Error</div>
+                            <div class="result-value">Could not connect to the server</div>
+                        </div>
+                    </div>
+                `;
+            }
+        });
+
+        // Add input validation with visual feedback
+        const inputs = document.querySelectorAll('input[type="number"]');
+        inputs.forEach(input => {
+            input.addEventListener('input', function() {
+                if (this.validity.valid) {
+                    this.style.borderColor = '#10b981';
+                    setTimeout(() => {
+                        this.style.borderColor = '';
+                    }, 1000);
+                }
+            });
+
+            input.addEventListener('invalid', function() {
+                this.style.borderColor = '#ef4444';
+                this.style.animation = 'shake 0.3s';
+            });
+        });
+
+        // Add shake animation for invalid inputs
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
